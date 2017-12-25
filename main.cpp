@@ -1,13 +1,20 @@
 #include <bits/stdc++.h>
+#include <gtest/gtest.h>
 
 using namespace std;
 
-int main(){
-  assert(0b00000001 == 0x01);
+int add(int x, int y){
+  return x+y;
+}
 
-  int a = 0, b = 1;
-  decltype(auto) d = a + b;
-  assert(d == 1);
+TEST(AddTest, addDoesAddition){
+  int x = 0, y = 1;
+  EXPECT_EQ(1, add(x,y));
+  EXPECT_EQ(0, add(-1,1));
+}
 
-  return 0;
+int main(int argc, char** argv){
+  ::testing::InitGoogleTest(&argc, argv);
+
+  return RUN_ALL_TESTS();
 }
