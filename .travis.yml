@@ -30,6 +30,7 @@ before_script:
   - export CXX=/usr/bin/g++-7
   - export CC=/usr/bin/gcc-7
   - export GTEST_DIR=googletest/googletest
+  - chmod +x ./compile.sh
   
 script: 
   - ./compile.sh
