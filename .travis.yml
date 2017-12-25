@@ -2,6 +2,10 @@ language: cpp
 dist: trusty
 sudo: false
 
+branches:
+  only:
+    - master
+
 addons:
   apt:
     sources:
@@ -9,9 +13,26 @@ addons:
     packages:
       - g++-7
 
+install:
+  - export CXX=/usr/bin/g++-7
+  - export CC=/usr/bin/gcc-7
+  - |
+    cd googletest/googletest
+    cmake -DCMAKE_CXX_COMPILER=/usr/bin/g++-7 . && cmake --build .
+    g++ -isystem ./include -I. -pthread -c ./src/gtest-all.cc
+    ar -rv libgtest.a gtest-all.o
+    export CPLUS_INCLUDE_PATH=$CPLUS_INCLUDE_PATH:$PWD/include
+    export LIBRARY_PATH=$LIBRARY_PATH:$PWD
+    env
+    cd -
+
+before_script:
+  - export CXX=/usr/bin/g++-7
+  - export CC=/usr/bin/gcc-7
+  - export GTEST_DIR=googletest/googletest
+  
 script: 
-  - CXX=/usr/bin/g++-7 CC=/usr/bin/gcc-7 cmake .
-  - cmake --build .
+  - ./compile.sh
   - ./travis_test
 
 notifications:
