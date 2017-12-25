@@ -3,7 +3,7 @@
 using namespace std;
 
 int main(){
-  assert(0 == 1);
+  assert(1 == 1);
 
   return 0;
 }
