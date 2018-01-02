@@ -2,16 +2,13 @@ language: cpp
 dist: trusty
 sudo: false
 
-branches:
-  only:
-    - master
-
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
+      - gmp
 
 install:
   - export CXX=/usr/bin/g++-7
@@ -25,6 +22,7 @@ install:
     export LIBRARY_PATH=$LIBRARY_PATH:$PWD
     env
     cd -
+  - apt-get install gmp
 
 before_script:
   - export CXX=/usr/bin/g++-7
