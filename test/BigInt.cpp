@@ -140,7 +140,7 @@ TEST(AddTest, MultGeneral){
 	ASSERT_EQ(x * y, bx.to_ll()) << x << " *= " << y;
   }
 
-  char buf[1024];
+  char buf[2048];
   for(int i=0;i<1000;++i){
 	int digitx = rnd() % 50 + 10;
 	int digity = rnd() % 50 + 10;
