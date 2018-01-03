@@ -9,6 +9,7 @@ addons:
     packages:
       - g++-7
       - libgmp-dev
+      - libgmp10
 
 install:
   - export CXX=/usr/bin/g++-7
