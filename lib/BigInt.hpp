@@ -189,6 +189,25 @@ public:
   BigInt& operator-=(const BigInt& rhs){ return *this += -rhs; }
   BigInt operator+(const BigInt& rhs) const { BigInt res = *this; return res += rhs; }
   BigInt operator-(const BigInt& rhs) const { BigInt res = *this; return res -= rhs; }
+  BigInt operator*(const BigInt& rhs) const {
+	BigInt res;
+	res.dig.assign(dig.size() + rhs.dig.size() + 1, 0ll);
+	res.neg = neg ^ rhs.neg;
+
+	for(unsigned i=0;i<rhs.dig.size();++i){
+	  for(unsigned j=0;j<dig.size();++j){
+		res.dig[i+j] += rhs.dig[i] * dig[j];
+		if(res.dig[i+j] >= BASE){
+		  res.dig[i+j+1] += res.dig[i+j] / BASE;
+		  res.dig[i+j] %= BASE;
+		}
+	  }
+	}
+	res.norm();
+
+	return res;
+  }
+  BigInt operator*=(const BigInt& rhs){ return *this = *this * rhs; }
 
   std::string to_string() const {
 	assert(!dig.empty());
