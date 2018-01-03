@@ -22,7 +22,6 @@ install:
     export LIBRARY_PATH=$LIBRARY_PATH:$PWD
     env
     cd -
-  - apt-get install gmp
 
 before_script:
   - export CXX=/usr/bin/g++-7
