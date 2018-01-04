@@ -7,12 +7,11 @@
 #include <cassert>
 
 struct BigInt {
-private:
+public:
   using LL = long long int;
   static const LL BASE = 1000000000;
   const int DIG = 9;
 
-public:
   bool neg;
   std::vector<LL> dig;
 
@@ -64,9 +63,14 @@ public:
   BigInt& operator=(const char* s){ return *this = BigInt(s); }
   BigInt& operator=(const std::string& s){ return *this = BigInt(s); }
 
+  bool iszero() const {
+	return dig.size() == 1 && dig[0] == 0;
+  }
+
   BigInt operator-() const {
 	BigInt res = *this;
-	res.neg = !res.neg;
+	if(!res.iszero())
+	  res.neg = !res.neg;
 	return res;
   }
 
@@ -135,7 +139,7 @@ public:
   }
   void norm(){
 	while(dig.size() > 1 && dig.back() == 0) dig.pop_back();
-	if(dig.size() == 1 && dig[0] == 0) neg = false;
+	if(iszero()) neg = false;
   }
   bool operator==(const BigInt& rhs) const {
 	if(neg != rhs.neg || dig.size() != rhs.dig.size()) return false;
@@ -154,6 +158,50 @@ public:
   bool operator!=(const BigInt& rhs) const { return !(*this == rhs); }
   bool operator>(const BigInt& rhs)  const { return rhs < *this; }
   bool operator>=(const BigInt& rhs) const { return rhs <= *this; }
+
+  // ignoring sign
+  void incl(){
+	for(unsigned int i=0;i<dig.size();++i)
+	  if(++dig[i] == BASE){
+		dig[i] = 0;
+		if(i+1 == dig.size()){
+		  dig.push_back(1);
+		  break;
+		}
+	  }
+	  else break;
+  }
+  // ignoring sign
+  void decl(){
+	if(iszero()){
+	  dig[0] = 1;
+	  neg = true;
+	  return;
+	}
+	for(unsigned int i=0;i<dig.size();++i)
+	  if(--dig[i] == -1)
+		dig[i] = BASE-1;
+	  else break;
+	norm();
+  }
+  BigInt& operator++(){
+	if(!neg) incl(); else decl();
+	return *this;
+  }
+  BigInt operator++(int){
+	BigInt res = *this;
+	if(!neg) incl(); else decl();
+	return res;
+  }
+  BigInt& operator--(){
+	if(!neg) decl(); else incl();
+	return *this;
+  }
+  BigInt operator--(int){
+	BigInt res = *this;
+	if(!neg) decl(); else incl();
+	return res;
+  }
 
   BigInt& operator+=(const BigInt& rhs){
 	if(!this->neg){
@@ -195,6 +243,7 @@ public:
 	res.neg = neg ^ rhs.neg;
 
 	for(unsigned i=0;i<rhs.dig.size();++i){
+	  if(rhs.dig[i] == 0) continue;
 	  for(unsigned j=0;j<dig.size();++j){
 		res.dig[i+j] += rhs.dig[i] * dig[j];
 		if(res.dig[i+j] >= BASE){
@@ -208,6 +257,116 @@ public:
 	return res;
   }
   BigInt operator*=(const BigInt& rhs){ return *this = *this * rhs; }
+
+  static void divll(BigInt& x, LL& r, LL d){
+	bool lneg = x.neg;
+	x.neg ^= (d < 0);
+	if(d < 0) d *= -1;
+	
+	r = 0;
+	for(int i=(int)x.dig.size()-1;i>=0;--i){
+	  r = r * BASE + x.dig[i];
+	  x.dig[i] = r / d;
+	  r %= d;
+	}
+	x.norm();
+
+	if(r != 0 && lneg)
+	  r *= -1;
+  }
+
+  void powB(LL x){
+	if(iszero()) return;
+	while(x > 0){
+	  dig.insert(dig.begin(), 0ll);
+	  --x;
+	}
+  }
+  static void divmod(BigInt& q, BigInt& r, const BigInt& lhs, const BigInt& rhs){
+	int cmp = comp(lhs, rhs);
+	if(cmp < 0){
+	  q.dig = std::vector<LL>(1, 0ll);
+	  q.neg = false;
+	  r = lhs;
+	  return;
+	}
+	else if(cmp == 0){
+	  q.dig = std::vector<LL>(1, 1ll);
+	  q.neg = false;
+	  r.dig = std::vector<LL>(1, 0ll);
+	  r.neg = false;
+	  return;
+	}
+	if(rhs.dig.size() == 1){
+	  LL rl;
+	  q = lhs;
+	  divll(q, rl, rhs.dig[0] * (rhs.neg?-1ll:1ll));
+	  r = rl;
+	  return;
+	}
+
+	q.neg = r.neg = false;
+	
+	int u = lhs.dig.size() - rhs.dig.size() + 1;
+	q.dig.assign(u+1, 0ll);
+
+	LL K = BASE / (rhs.dig.back() + 1);
+	BigInt ltmp = lhs, rtmp = rhs;
+	ltmp.neg = rtmp.neg = false;
+
+	if(K > 1){
+	  ltmp *= K;
+	  rtmp *= K;
+	}
+
+	LL x = ltmp.dig.back() / rtmp.dig.back();
+	if(x == 0){
+	  --u;
+	  x = (ltmp.dig.back() * BASE + ltmp.dig[ltmp.dig.size()-2]) / rtmp.dig.back();
+	}
+	BigInt w = 0ll;
+	while(true){
+	  w = rtmp;
+	  w.powB(u);
+	  if(comp(w, ltmp) > 0){
+		--u;
+		continue;
+	  }
+	  while(true){
+		w = rtmp * x;
+		w.powB(u);
+		if(comp(w, ltmp) <= 0) break;
+		--x;
+	  }
+
+	  q.dig[u--] = x;
+	  ltmp -= w;
+	  if(ltmp == 0ll || u < 0) break;
+
+	  x = std::min(BASE-1,
+				   (ltmp.dig.back() * BASE + ltmp.dig[ltmp.dig.size()-2]) / rtmp.dig.back());
+	}
+	q.norm();
+
+	r = ltmp;
+	if(ltmp != 0ll) divll(r, x, K);
+	q.neg = lhs.neg ^ rhs.neg;
+	r.neg = lhs.neg;
+	r.norm();
+  }
+
+  BigInt operator/(const BigInt& rhs) const {
+	BigInt q, r;
+	divmod(q, r, *this, rhs);
+	return q;
+  }
+  BigInt operator%(const BigInt& rhs) const {
+	BigInt q, r;
+	divmod(q, r, *this, rhs);
+	return r;
+  }
+  BigInt& operator/=(BigInt rhs){ return *this = *this / rhs; }
+  BigInt& operator%=(BigInt rhs){ return *this = *this % rhs; }
 
   std::string to_string() const {
 	assert(!dig.empty());

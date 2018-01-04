@@ -7,10 +7,6 @@ using namespace std;
 
 random_device rnd;
 
-int add(int x, int y){
-  return x+y;
-}
-
 TEST(AddTest, AddGeneral){
   const int MAX = 1e9;
   for(int i=0;i<1000;++i){
@@ -124,7 +120,7 @@ TEST(SubtractTest, Subtract){
   }
 }
 
-TEST(AddTest, MultGeneral){
+TEST(MultTest, MultGeneral){
   const long long int MAX = 1e9;
   for(int i=0;i<1000;++i){
 	long long int x = rnd() % MAX;
@@ -169,6 +165,175 @@ TEST(AddTest, MultGeneral){
 	ASSERT_STREQ(buf, bx.to_string().c_str()) << sx << " *= " << sy;
   }
 }
+
+TEST(IncrDecrTest, IncrDecrGeneral){
+  const long long int MAX = 1e9;
+  char buf[1024];
+  for(int i=0;i<100;++i){
+	int digitx = rnd() % 100 + 10;
+	string sx;
+	if(rnd() % 2) sx += "-";
+
+	sx += to_string(rnd()% MAX+1);
+	for(int j=0;j<digitx;++j)
+	  sx += to_string(rnd()% MAX);
+
+	mpz_t x, y, z;
+	mpz_init(x); mpz_init(y); mpz_init(z);
+	mpz_set_str(x, sx.c_str(), 10);
+	mpz_set_str(y, "1", 10);
+	mpz_add(z, x, y);
+	mpz_get_str(buf, 10, z);
+
+	BigInt bx = sx;
+	ASSERT_STREQ(sx.c_str(), (bx++).to_string().c_str()) << sx << "++";
+	ASSERT_STREQ(buf, bx.to_string().c_str()) << sx << "++";
+
+	ASSERT_STREQ(buf, (bx--).to_string().c_str()) << sx << "--";
+	ASSERT_STREQ(sx.c_str(), bx.to_string().c_str()) << sx << "--";
+
+  	ASSERT_STREQ(buf, (++bx).to_string().c_str()) << "++" << sx;
+	ASSERT_STREQ(buf, bx.to_string().c_str()) << "++" << sx;
+
+	ASSERT_STREQ(sx.c_str(), (--bx).to_string().c_str()) << "--" << sx;
+	ASSERT_STREQ(sx.c_str(), bx.to_string().c_str()) << "--" << sx;
+  }
+}
+TEST(IncrDecrTest, IncrDecrCorner){
+  char buf[1024];
+
+  BigInt x = -1ll;
+  ++x;
+  ASSERT_EQ(0, x.to_ll()) << "++-1";
+  ++x;
+  ASSERT_EQ(1, x.to_ll()) << "++0";
+
+  x = 1;
+  --x;
+  ASSERT_EQ(0, x.to_ll()) << "--1";
+  --x;
+  ASSERT_EQ(-1, x.to_ll()) << "--0";
+
+  const long long int MAX = BigInt::BASE;
+  x = MAX;
+  --x;
+  ASSERT_EQ(MAX-1, x.to_ll());
+  ++x;
+  ASSERT_EQ(MAX, x.to_ll());
+}
+  
+TEST(DivTest, DivGeneral){
+  BigInt a = 5, b = 3;
+  ASSERT_EQ(5/3, (a/b).to_ll());
+  a = -5, b = 3;
+  ASSERT_EQ(-5/3, (a/b).to_ll());
+  a = 5, b = -3;
+  ASSERT_EQ(5/-3, (a/b).to_ll());
+  a = -5, b = -3;
+  ASSERT_EQ(-5/-3, (a/b).to_ll());
+
+  const long long int MAX = 1e9;
+  for(int i=0;i<1000;++i){
+	long long int x = rnd() % MAX;
+	long long int y = rnd() % (MAX-1) + 1;
+	if(rnd() % 2) x *= -1;
+	if(rnd() % 2) y *= -1;
+
+	BigInt bx = x;
+	BigInt by = y;
+	ASSERT_EQ(x / y, (bx / by).to_ll()) << x << " / " << y;
+	
+	bx /= by;
+	ASSERT_EQ(x / y, bx.to_ll()) << x << " /= " << y;
+  }
+
+  char buf[2048];
+  for(int i=0;i<1000;++i){
+	int digitx = rnd() % 50 + 10;
+	int digity = rnd() % 50 + 10;
+	string sx, sy;
+	if(rnd() % 2) sx += "-";
+	if(rnd() % 2) sy += "-";
+
+	sx += to_string(rnd()%MAX+1);
+	sy += to_string(rnd()%MAX+1);
+	for(int j=0;j<digitx;++j)
+	  sx += to_string(rnd()% MAX);
+	for(int j=0;j<digity;++j)
+	  sy += to_string(rnd()% MAX);
+
+	mpz_t x, y, q;
+	mpz_init(x); mpz_init(y); mpz_init(q);
+	mpz_set_str(x, sx.c_str(), 10);
+	mpz_set_str(y, sy.c_str(), 10);
+	mpz_tdiv_q(q, x, y);
+
+	mpz_get_str(buf, 10, q);
+
+	BigInt bx = sx, by = sy;
+	ASSERT_STREQ(buf, (bx / by).to_string().c_str()) << sx << " / " << sy;
+
+	bx /= by;
+	ASSERT_STREQ(buf, bx.to_string().c_str()) << sx << " /= " << sy;
+  }
+}
+
+TEST(ModTest, ModGeneral){
+  BigInt a = 5, b = 3;
+  ASSERT_EQ(5%3, (a%b).to_ll());
+  a = -5, b = 3;
+  ASSERT_EQ(-5%3, (a%b).to_ll());
+  a = 5, b = -3;
+  ASSERT_EQ(5%-3, (a%b).to_ll());
+  a = -5, b = -3;
+  ASSERT_EQ(-5%-3, (a%b).to_ll());
+
+  const long long int MAX = 1e9;
+  for(int i=0;i<1000;++i){
+	long long int x = rnd() % MAX;
+	long long int y = rnd() % MAX + 1;
+	if(rnd() % 2) x *= -1;
+	if(rnd() % 2) y *= -1;
+
+	BigInt bx = x;
+	BigInt by = y;
+	ASSERT_EQ(x % y, (bx % by).to_ll()) << x << " % " << y;
+	
+	bx %= by;
+	ASSERT_EQ(x % y, bx.to_ll()) << x << " %= " << y;
+  }
+
+  char buf[2048];
+  for(int i=0;i<1000;++i){
+	int digitx = rnd() % 50 + 10;
+	int digity = rnd() % 50 + 10;
+	string sx, sy;
+	if(rnd() % 2) sx += "-";
+	if(rnd() % 2) sy += "-";
+
+	sx += to_string(rnd()%MAX+1);
+	sy += to_string(rnd()%MAX+1);
+	for(int j=0;j<digitx;++j)
+	  sx += to_string(rnd()% MAX);
+	for(int j=0;j<digity;++j)
+	  sy += to_string(rnd()% MAX);
+
+	mpz_t x, y, q;
+	mpz_init(x); mpz_init(y); mpz_init(q);
+	mpz_set_str(x, sx.c_str(), 10);
+	mpz_set_str(y, sy.c_str(), 10);
+	mpz_tdiv_r(q, x, y);
+
+	mpz_get_str(buf, 10, q);
+
+	BigInt bx = sx, by = sy;
+	ASSERT_STREQ(buf, (bx % by).to_string().c_str()) << sx << " % " << sy;
+
+	bx %= by;
+	ASSERT_STREQ(buf, bx.to_string().c_str()) << sx << " %= " << sy;
+  }
+}
+
 
 int main(int argc, char** argv){
   ::testing::InitGoogleTest(&argc, argv);
