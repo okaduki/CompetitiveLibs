@@ -276,10 +276,7 @@ public:
 
   void powB(LL x){
 	if(iszero()) return;
-	while(x > 0){
-	  dig.insert(dig.begin(), 0ll);
-	  --x;
-	}
+	dig.insert(dig.begin(), x, 0ll);
   }
   static void divmod(BigInt& q, BigInt& r, const BigInt& lhs, const BigInt& rhs){
 	int cmp = comp(lhs, rhs);
