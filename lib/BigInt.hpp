@@ -42,8 +42,7 @@ public:
 	  }
 	  crt += p * (str[i] - '0');
 	}
-	if(crt)
-	  dig.emplace_back(crt);
+	dig.emplace_back(crt);
 	norm();
   }
   BigInt(LL x) : neg(x<0), dig(1, std::abs(x)){
@@ -111,7 +110,7 @@ public:
 	for(;i<l.dig.size();++i)
 	  if(l.dig[i] >= BASE){
 		l.dig[i] -= BASE;
-		if(l.dig.size() <= i)
+		if(l.dig.size() <= i+1)
 		  l.dig.emplace_back(0);
 		l.dig[i+1]++;
 	  }

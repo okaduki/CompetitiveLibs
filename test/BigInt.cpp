@@ -85,6 +85,17 @@ TEST(AddTest, AddCorner){
   by = z;
   bx += by;
   ASSERT_EQ(0, bx.to_ll()) << -z << " += " << z;
+
+  bx = "0";
+  by = "0";
+  ASSERT_EQ(0, (bx+by).to_ll()) << "\"0\" + \"0\"" ;
+  ASSERT_STREQ("0", (bx+by).to_string().c_str()) << "\"0\" + \"0\"" ;
+
+  z = (BigInt::BASE-1) * BigInt::BASE + BigInt::BASE - 1;
+  bx = z;
+  by = 1;
+  ASSERT_EQ(z+1, (bx+by).to_ll());
+  ASSERT_STREQ(to_string(z+1).c_str(), (bx+by).to_string().c_str());
 }
 
 TEST(SubtractTest, Subtract){
